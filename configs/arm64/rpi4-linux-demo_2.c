@@ -2,7 +2,7 @@
  * Jailhouse, a Linux-based partitioning hypervisor
  *
  * Configuration for linux-demo inmate on Raspberry Pi 4:
- * 1 CPU, 256M RAM, serial port
+ * 1 CPUs, 128M RAM, serial port
  *
  * Copyright (c) Siemens AG, 2014-2020
  *
@@ -26,7 +26,7 @@ struct {
 	.cell = {
 		.signature = JAILHOUSE_CELL_DESC_SIGNATURE,
 		.revision = JAILHOUSE_CONFIG_REVISION,
-		.name = "rpi4-linux-demo",
+		.name = "rpi4-linux-demo-2",
 		.flags = JAILHOUSE_CELL_PASSIVE_COMMREG |
 			JAILHOUSE_CELL_VIRTUAL_CONSOLE_PERMITTED,
 
@@ -46,7 +46,7 @@ struct {
 	},
 
 	.cpus = {
-		0b0100,
+		0b1000,
 	},
 
 	.mem_regions = {
@@ -72,7 +72,7 @@ struct {
 		},
 		{
 			.phys_start = 0x2401e000,
-			.virt_start = 0x2401e000,
+			.virt_start = 0x2f01e000,
 			.size = 0x4000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_ROOTSHARED,
 		},
@@ -80,19 +80,17 @@ struct {
 			.phys_start = 0x24022000,
 			.virt_start = 0x24022000,
 			.size = 0x4000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+			.flags = JAILHOUSE_MEM_READ |
 				JAILHOUSE_MEM_ROOTSHARED,
 		},
 		{
                         .phys_start = 0x24026000,
                         .virt_start = 0x24026000,
-                        .size = 0x2000,
-                        .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_ROOTSHARED,
+                        .size = 0x4000,
+                        .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_ROOTSHARED,
                 },
-
-                /* IVSHMEM shared memory region */
-                JAILHOUSE_SHMEM_NET_REGIONS(0x35000000, 1),
-
+		/* IVSHMEM shared memory region */
+		JAILHOUSE_SHMEM_NET_REGIONS(0x35100000, 1),
 		/* UART */ {
 			.phys_start = 0xfe215040,
 			.virt_start = 0xfe215040,
@@ -102,20 +100,16 @@ struct {
 				JAILHOUSE_MEM_IO_32 | JAILHOUSE_MEM_ROOTSHARED,
 		},
 		/* RAM */ {
-			.phys_start = 0x2402a000,
-			//.phys_start = 0x40000000,
+			.phys_start = 0x2403a000,
 			.virt_start = 0,
 			.size = 0x10000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE,
 		},
 		/* RAM */ {
-			.phys_start = 0x25000000,
-			//.phys_start = 0x40000000,
-			.virt_start = 0x25000000,
-			//.virt_start = 0x80000000,
-			.size = 0x08000000,
-			//.size = 0x60000000,
+			.phys_start = 0x2d000000,
+			.virt_start = 0x2d000000,
+			.size = 0x8000000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA |
 				JAILHOUSE_MEM_LOADABLE,
@@ -127,29 +121,29 @@ struct {
 				JAILHOUSE_MEM_COMM_REGION,
 		},
 	},
+        .irqchips = {
+                /* GIC */ {
+                        .address = 0xff841000,
+                        .pin_base = 32,
+                        .pin_bitmap = {
+                                0,
+                                0,
+                                1 << (125 - 96),
+                                0,
+                        },
+                },
+                /* GIC */ {
+                        .address = 0xff841000,
+                        .pin_base = 160,
+                        .pin_bitmap = {
+                                (1 << (185 - 160)) | (1 << (187 - 160)),
+				0,
+                                0,
+                                0
+                        },
+                },
+        },
 
-	.irqchips = {
-		/* GIC */ {
-			.address = 0xff841000,
-			.pin_base = 32,
-			.pin_bitmap = {
-				0,
-				0,
-				1 << (125 - 96),
-				0,
-			},
-		},
-		/* GIC */ {
-			.address = 0xff841000,
-			.pin_base = 160,
-			.pin_bitmap = {
-				(1 << (185 - 160)) | (1 << (186 - 160)),
-				0,
-				0,
-				0
-			},
-		},
-	},
 
 	.pci_devices = {
 		{ /* IVSHMEM 00:00.0 (demo) */
@@ -158,13 +152,13 @@ struct {
 			.bdf = 0 << 3,
 			.bar_mask = JAILHOUSE_IVSHMEM_BAR_MASK_INTX,
 			.shmem_regions_start = 0,
-			.shmem_dev_id = 2,
+			.shmem_dev_id = 3,
 			.shmem_peers = 4,
 			.shmem_protocol = JAILHOUSE_SHMEM_PROTO_UNDEFINED,
 		},
-		{ /* IVSHMEM 00:01.0 (networking) */
+		{ /* IVSHMEM 00:02.0 (networking) */
 			.type = JAILHOUSE_PCI_TYPE_IVSHMEM,
-			.bdf = 1 << 3,
+			.bdf = 2 << 3,
 			.bar_mask = JAILHOUSE_IVSHMEM_BAR_MASK_INTX,
 			.shmem_regions_start = 6,
 			.shmem_dev_id = 1,
